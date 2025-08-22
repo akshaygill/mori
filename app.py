@@ -4,10 +4,10 @@ from tuya_connector import TuyaOpenAPI
 import os
 
 # --- Configuration ---
-ACCESS_ID = vea8sgafrhtn9r7wrdqv  # From Tuya IoT Platform
-ACCESS_KEY = 270d8bb391a949f5bed7c000b8cb5e3c # From Tuya IoT Platform
+ACCESS_ID = os.environ.get('TUYA_ACCESS_ID')  # From Tuya IoT Platform
+ACCESS_KEY = os.environ.get('TUYA_ACCESS_KEY')c # From Tuya IoT Platform
 API_ENDPOINT = "https://openapi.tuyaus.com" # Or your region's endpoint
-DEVICE_ID = ebb0f4903e36b3a1ebatwg # Find this in the Tuya IoT Platform
+DEVICE_ID = os.environ.get('TUYA_DEVICE_ID') # Find this in the Tuya IoT Platform
 
 # --- Flask App ---
 app = Flask(__name__)
@@ -36,4 +36,5 @@ def get_soc():
         return jsonify(error="Failed to fetch data from Tuya API"), 500
 
 if __name__ == '__main__':
+
     app.run(debug=True)
