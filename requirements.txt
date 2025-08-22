@@ -3,4 +3,4 @@ flask
 tuya-iot-py-sdk
 flask-cors
 gunicorn
-tuya-connector
+tuya-connector-python
