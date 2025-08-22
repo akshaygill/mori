@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify, render_template  # <-- Import render_template
+from flask import Flask, jsonify, render_template
 from flask_cors import CORS
 from tuya_connector import TuyaOpenAPI
 
@@ -30,7 +30,7 @@ def calculate_soc(voltage):
     percent = ((voltage - VOLTAGE_MIN) / (VOLTAGE_MAX - VOLTAGE_MIN)) * 100
     return round(percent)
 
-# --- NEW ROUTE TO SERVE THE WEBPAGE ---
+# --- Route to Serve the Webpage ---
 @app.route('/')
 def home():
     """Serves the index.html file from the templates folder."""
