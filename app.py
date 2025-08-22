@@ -5,7 +5,7 @@ import os
 
 # --- Configuration ---
 ACCESS_ID = os.environ.get('TUYA_ACCESS_ID')  # From Tuya IoT Platform
-ACCESS_KEY = os.environ.get('TUYA_ACCESS_KEY')c # From Tuya IoT Platform
+ACCESS_KEY = os.environ.get('TUYA_ACCESS_KEY') # From Tuya IoT Platform
 API_ENDPOINT = "https://openapi.tuyaus.com" # Or your region's endpoint
 DEVICE_ID = os.environ.get('TUYA_DEVICE_ID') # Find this in the Tuya IoT Platform
 
@@ -38,3 +38,4 @@ def get_soc():
 if __name__ == '__main__':
 
     app.run(debug=True)
+
