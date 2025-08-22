@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battery Status</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: grid; 
+            place-content: center; 
+            height: 100vh; 
+            text-align: center; 
+            background-color: #f0f2f5; 
+            margin: 0;
+        }
+        .container { 
+            background-color: white; 
+            padding: 30px 50px; 
+            border-radius: 20px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); 
+            width: 300px;
+        }
+        h1 { 
+            color: #1c1e21; 
+            margin-top: 0;
+        }
+        #gauge {
+            width: 250px;
+            height: 200px;
+            margin: 0 auto;
+        }
+        #voltage-display { 
+            font-size: 1.5rem; 
+            color: #606770; 
+            margin-top: -15px; /* Pull voltage up closer to the gauge */
+        }
+        #last-updated { 
+            font-size: 0.9rem; 
+            color: #6c757d; 
+            margin-top: 20px; 
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/justgage/1.6.1/justgage.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Cabin Battery</h1>
+        <div id="gauge"></div>
+        <p id="voltage-display">-- V</p>
+        <p id="last-updated">Loading...</p>
+    </div>
+
+    <script>
+        // IMPORTANT: Replace with your actual Render URL
+        const apiUrl = 'https://your-app-name.onrender.com/status';
+
+        // --- 1. Create the Gauge ---
+        // This code runs once when the page loads to create the gauge graphic
+        var gauge = new JustGage({
+            id: 'gauge',        // The ID of the div to draw in
+            value: 0,           // The starting value
+            min: 0,             // Minimum value
+            max: 100,           // Maximum value
+            symbol: '%',        // The symbol to show after the value
+            pointer: true,      // Show the needle
+            gaugeWidthScale: 0.6,
+            counter: true,
+            relativeGaugeSize: true,
+            levelColors: [
+                "#ff0000",      // Red for 0-20%
+                "#ffa500",      // Orange for 21-40%
+                "#ffff00",      // Yellow for 41-60%
+                "#add8e6",      // Light Blue for 61-80%
+                "#008000"       // Green for 81-100%
+            ]
+        });
+
+        // --- 2. Fetch Data and Update the Gauge ---
+        async function fetchBatteryStatus() {
+            const voltageDisplay = document.getElementById('voltage-display');
+            const lastUpdatedDisplay = document.getElementById('last-updated');
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (data.soc !== undefined && data.voltage !== undefined) {
+                    // Update the gauge with the new SOC value
+                    gauge.refresh(data.soc);
+                    
+                    voltageDisplay.innerText = `${data.voltage} V`;
+                    lastUpdatedDisplay.innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
+                } else {
+                    voltageDisplay.innerText = 'Error';
+                    lastUpdatedDisplay.innerText = data.error || 'Could not retrieve data.';
+                }
+            } catch (error) {
+                voltageDisplay.innerText = 'Error';
+                lastUpdatedDisplay.innerText = 'Connection failed.';
+            }
+        }
+
+        // Fetch data on page load and then every 5 minutes
+        fetchBatteryStatus();
+        setInterval(fetchBatteryStatus, 300000);
+    </script>
+</body>
+</html>
