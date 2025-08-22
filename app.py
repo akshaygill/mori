@@ -19,7 +19,7 @@ except Exception as e:
     raise
 
 # --- Battery Configuration ---
-VOLTAGE_MAX = 54.6
+VOLTAGE_MAX = 51.0
 VOLTAGE_MIN = 42.0
 
 def calculate_soc(voltage):
@@ -58,3 +58,4 @@ def get_status():
 @app.route('/health')
 def health():
     return jsonify(status="ok")
+
