@@ -30,10 +30,21 @@
             height: 200px;
             margin: 0 auto;
         }
+        /* Style for the "Charging" text */
+        #charging-status {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #28a745; /* Green color for charging */
+            height: 200px; /* Match the gauge height to prevent layout shifts */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+        }
         #voltage-display { 
             font-size: 1.5rem; 
             color: #606770; 
-            margin-top: -15px; /* Pull voltage up closer to the gauge */
+            margin-top: -15px;
         }
         #last-updated { 
             font-size: 0.9rem; 
@@ -48,37 +59,40 @@
     <div class="container">
         <h1>Cabin Mori Battery</h1>
         <div id="gauge"></div>
+        <div id="charging-status" style="display: none;"></div>
+        
         <p id="voltage-display">-- V</p>
         <p id="last-updated">Loading...</p>
     </div>
 
     <script>
-        // IMPORTANT: Replace with your actual Render URL
+        // Your API URL is already correct
         const apiUrl = 'https://mori-q5bu.onrender.com/status';
 
         // --- 1. Create the Gauge ---
-        // This code runs once when the page loads to create the gauge graphic
         var gauge = new JustGage({
-            id: 'gauge',        // The ID of the div to draw in
-            value: 0,           // The starting value
-            min: 0,             // Minimum value
-            max: 100,           // Maximum value
-            symbol: '%',        // The symbol to show after the value
-            pointer: true,      // Show the needle
+            id: 'gauge',
+            value: 0,
+            min: 0,
+            max: 100,
+            symbol: '%',
+            pointer: true,
             gaugeWidthScale: 0.6,
             counter: true,
             relativeGaugeSize: true,
             levelColors: [
-                "#ff0000",      // Red for 0-20%
-                "#ffa500",      // Orange for 21-40%
-                "#ffff00",      // Yellow for 41-60%
-                "#add8e6",      // Light Blue for 61-80%
-                "#008000"       // Green for 81-100%
+                "#ff0000",
+                "#ffa500",
+                "#ffff00",
+                "#add8e6",
+                "#008000"
             ]
         });
 
-        // --- 2. Fetch Data and Update the Gauge ---
+        // --- 2. Fetch Data and Update the Display ---
         async function fetchBatteryStatus() {
+            const gaugeElement = document.getElementById('gauge');
+            const chargingStatusElement = document.getElementById('charging-status');
             const voltageDisplay = document.getElementById('voltage-display');
             const lastUpdatedDisplay = document.getElementById('last-updated');
 
@@ -87,24 +101,14 @@
                 const data = await response.json();
 
                 if (data.soc !== undefined && data.voltage !== undefined) {
-                    // Update the gauge with the new SOC value
-                    gauge.refresh(data.soc);
                     
-                    voltageDisplay.innerText = `${data.voltage} V`;
-                    lastUpdatedDisplay.innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
-                } else {
-                    voltageDisplay.innerText = 'Error';
-                    lastUpdatedDisplay.innerText = data.error || 'Could not retrieve data.';
-                }
-            } catch (error) {
-                voltageDisplay.innerText = 'Error';
-                lastUpdatedDisplay.innerText = 'Connection failed.';
-            }
-        }
-
-        // Fetch data on page load and then every 5 minutes
-        fetchBatteryStatus();
-        setInterval(fetchBatteryStatus, 300000);
-    </script>
-</body>
-</html>
+                    // === THIS IS THE NEW LOGIC ===
+                    if (data.voltage > 52) {
+                        // If voltage is high, show "Charging" message
+                        gaugeElement.style.display = 'none'; // Hide the gauge
+                        chargingStatusElement.style.display = 'flex'; // Show the charging text
+                        chargingStatusElement.innerText = 'Charging in Progress';
+                    } else {
+                        // Otherwise, show the percentage gauge
+                        gaugeElement.style.display = 'block'; // Show the gauge
+                        chargingStatusElement.style.display = 'none'; // Hide the charging text
