@@ -24,6 +24,11 @@
         h1 { 
             color: #1c1e21; 
             margin-top: 0;
+            font-size: 1.8rem;
+            line-height: 1.4;
+        }
+        h1 strong {
+            font-size: 2.2rem; /* Larger font size for the bolded part */
         }
         #gauge {
             width: 250px;
@@ -40,15 +45,29 @@
             color: #6c757d; 
             margin-top: 20px; 
         }
+        #charging-status {
+            font-size: 1.2rem;
+            color: #ff9900;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        #low-battery-status {
+            font-size: 1.2rem;
+            color: #ff0000;
+            font-weight: bold;
+            margin-top: 20px;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/justgage/1.6.1/justgage.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Cabin Mori Battery</h1>
+        <h1><strong>Welcome to Cabin Mori!</strong><br>Here is the battery status</h1>
         <div id="gauge"></div>
         <p id="voltage-display">-- V</p>
+        <p id="charging-status" style="display: none;">Charging in Progress...</p>
+        <p id="low-battery-status" style="display: none;">Run the generator</p>
         <p id="last-updated">Loading...</p>
     </div>
 
@@ -57,7 +76,6 @@
         const apiUrl = 'https://mori-q5bu.onrender.com/status';
 
         // --- 1. Create the Gauge ---
-        // This code runs once when the page loads to create the gauge graphic
         var gauge = new JustGage({
             id: 'gauge',        // The ID of the div to draw in
             value: 0,           // The starting value
@@ -81,24 +99,47 @@
         async function fetchBatteryStatus() {
             const voltageDisplay = document.getElementById('voltage-display');
             const lastUpdatedDisplay = document.getElementById('last-updated');
+            const chargingStatus = document.getElementById('charging-status');
+            const lowBatteryStatus = document.getElementById('low-battery-status');
+            const gaugeElement = document.getElementById('gauge');
 
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
 
                 if (data.soc !== undefined && data.voltage !== undefined) {
-                    // Update the gauge with the new SOC value
-                    gauge.refresh(data.soc);
-                    
-                    voltageDisplay.innerText = `${data.voltage} V`;
-                    lastUpdatedDisplay.innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
+                    // Check if voltage is greater than 52V, indicating charging
+                    if (data.voltage > 52) {
+                        chargingStatus.style.display = 'block';  // Show charging status
+                        gaugeElement.style.display = 'none';     // Hide the gauge
+                        lowBatteryStatus.style.display = 'none'; // Hide low battery message
+                        voltageDisplay.innerText = `${data.voltage} V`;
+                        lastUpdatedDisplay.innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
+                    } else {
+                        chargingStatus.style.display = 'none';  // Hide charging status
+                        gaugeElement.style.display = 'block';   // Show the gauge again
+                        if (data.soc < 25) {
+                            lowBatteryStatus.style.display = 'block'; // Show "Run the generator"
+                        } else {
+                            lowBatteryStatus.style.display = 'none';  // Hide low battery message
+                        }
+                        gauge.refresh(data.soc);                // Update the gauge with the SOC value
+                        voltageDisplay.innerText = `${data.voltage} V`;
+                        lastUpdatedDisplay.innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
+                    }
                 } else {
                     voltageDisplay.innerText = 'Error';
                     lastUpdatedDisplay.innerText = data.error || 'Could not retrieve data.';
+                    chargingStatus.style.display = 'none';  // Hide charging status on error
+                    lowBatteryStatus.style.display = 'none'; // Hide low battery message on error
+                    gaugeElement.style.display = 'none';    // Hide the gauge on error
                 }
             } catch (error) {
                 voltageDisplay.innerText = 'Error';
                 lastUpdatedDisplay.innerText = 'Connection failed.';
+                chargingStatus.style.display = 'none';  // Hide charging status on error
+                lowBatteryStatus.style.display = 'none'; // Hide low battery message on error
+                gaugeElement.style.display = 'none';    // Hide the gauge on error
             }
         }
 
