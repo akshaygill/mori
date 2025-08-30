@@ -41,3 +41,70 @@
             margin-top: 20px; 
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/justgage/1.6.1/justgage.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Cabin Mori Battery</h1>
+        <div id="gauge"></div>
+        <p id="voltage-display">-- V</p>
+        <p id="last-updated">Loading...</p>
+    </div>
+
+    <script>
+        // IMPORTANT: Replace with your actual Render URL
+        const apiUrl = 'https://mori-q5bu.onrender.com/status';
+
+        // --- 1. Create the Gauge ---
+        // This code runs once when the page loads to create the gauge graphic
+        var gauge = new JustGage({
+            id: 'gauge',        // The ID of the div to draw in
+            value: 0,           // The starting value
+            min: 0,             // Minimum value
+            max: 100,           // Maximum value
+            symbol: '%',        // The symbol to show after the value
+            pointer: true,      // Show the needle
+            gaugeWidthScale: 0.6,
+            counter: true,
+            relativeGaugeSize: true,
+            levelColors: [
+                "#ff0000",      // Red for 0-20%
+                "#ffa500",      // Orange for 21-40%
+                "#ffff00",      // Yellow for 41-60%
+                "#add8e6",      // Light Blue for 61-80%
+                "#008000"       // Green for 81-100%
+            ]
+        });
+
+        // --- 2. Fetch Data and Update the Gauge ---
+        async function fetchBatteryStatus() {
+            const voltageDisplay = document.getElementById('voltage-display');
+            const lastUpdatedDisplay = document.getElementById('last-updated');
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (data.soc !== undefined && data.voltage !== undefined) {
+                    // Update the gauge with the new SOC value
+                    gauge.refresh(data.soc);
+                    
+                    voltageDisplay.innerText = `${data.voltage} V`;
+                    lastUpdatedDisplay.innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
+                } else {
+                    voltageDisplay.innerText = 'Error';
+                    lastUpdatedDisplay.innerText = data.error || 'Could not retrieve data.';
+                }
+            } catch (error) {
+                voltageDisplay.innerText = 'Error';
+                lastUpdatedDisplay.innerText = 'Connection failed.';
+            }
+        }
+
+        // Fetch data on page load and then every 5 minutes
+        fetchBatteryStatus();
+        setInterval(fetchBatteryStatus, 300000);
+    </script>
+</body>
+</html>
